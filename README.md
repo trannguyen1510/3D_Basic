@@ -1,12 +1,12 @@
 # 3D_Basic
 
-** Requirements:
+## Requirements:
 - Node.js
 - npm
 - live-server (tapio/live-server)
 - All file in folder lib must have their location accurate
 
-** How to use:
+## How to use:
 - Open cmd at exercise root directory (type "cmd" at directory link box of File Explorer [Win10])
 - Type "live-server"
 - The result will be opened and view in browser
