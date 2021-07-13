@@ -1,63 +1,101 @@
-function init(){
+function init () {
+	// -------------- Init ------------------
+
+	// Init global var
 	var scene = new THREE.Scene()
 	var gui = new dat.GUI()
 	var clock = new THREE.Clock()
 
-	var enableFog = true
+	var enableFog = false
 
 	if (enableFog){
 		scene.fog = new THREE.FogExp2(0xffffff, 0.01)
 	}
 
-	// var pointLight = getPointLight(1)
-	// var spotLight = getSpotLight(1)
+	// Init light
 	var directionalLight = getDirectionalLight(1)
-	// var ambientLight = getAmbientLight(5)
 
-	var plane = getPlane(100)
-	var sphere = getSphere(0.05)
-	var boxGrid = getBoxGrid(20, 2.5)
-	// var helper = new THREE.CameraHelper(directionalLight.shadow.camera)
+	// Init plane
+	var planeMaterial = getMaterial('standard', 'rgb(153, 153, 153)')
+	var plane = getPlane(planeMaterial, 300)
 
-	boxGrid.name = 'boxGrid'
 
-	// wireframe = getBorder(box)
+	//Init cube/box (hình hộp)
+	var boxMaterial = getMaterial('standard', 'rgb(92, 133, 214)')
+	var box = getBox(sphereMaterial, 30, 30, 30)
 	
 
+	// Init sphere (hình cầu)
+	var sphereMaterial = getMaterial('standard', 'rgb(92, 133, 214)')
+	var sphere = getSphere(sphereMaterial, 1, 24)
+
+
+	// Init cone (hình nón)
+
+
+
+	// Init cylinder (hình trụ)
+
+
+
+	// Init wheel (bánh xe)
+
+
+
+	// Init tea pot (ấm trà)
+
+
+	// Init multiple boxs
+	var boxGrid = getBoxGrid(20, 2.5)
+
+
+	// Init....
+
+
+	// Init helper
+	// var helper = new THREE.CameraHelper(directionalLight.shadow.camera)
+
+	// ---------------- Manipulate materials --------------
+
+	// Plane
 	plane.rotation.x = Math.PI/2
-	// pointLight.position.y = 2
-	// pointLight.intensity = 2
-	// spotLight.position.y = 4
-	// spotLight.intensity = 2
+	plane.position.y = -100
+
+	// Sphere
+	sphere.position.y = sphere.geometry.parameters.radius	
+
+
+	// Light
 	directionalLight.position.x = 13
 	directionalLight.position.y = 10
 	directionalLight.position.z = 10
 	directionalLight.intensity = 2
+	// Texture
 
-	// gui.add(pointLight, 'intensity', 0, 10)
-	// gui.add(pointLight.position, 'y', 0, 5)
-	// gui.add(spotLight, 'intensity', 0, 10)
-	// gui.add(spotLight.position, 'x', 0, 20)
-	// gui.add(spotLight.position, 'y', 0, 20)
-	// gui.add(spotLight.position, 'z', 0, 20)
-	// gui.add(spotLight, 'penumbra', 0, 1)
-	// gui.add(directionalLight, 'intensity', 0, 10)
-	// gui.add(directionalLight.position, 'x', 0, 20)
-	// gui.add(directionalLight.position, 'y', 0, 20)
-	// gui.add(directionalLight.position, 'z', 0, 20)
 
-	// box.add(wireframe)
-	// pointLight.add(sphere)
-	// spotLight.add(sphere)
-	directionalLight.add(sphere)
 
-	scene.add(boxGrid)
+
+	// ---------------- dat.gui -------------
+	var folder3 = gui.addFolder('material')
+	// folder3.add(sphereMaterial, 'shininess', 0, 1000)  // only for phong material
+	// folder3.add(planeMaterial, 'shininess', 0, 1000)
+
+	// folder3.add(sphereMaterial, 'roughness', 0, 1)
+	// folder3.add(planeMaterial, 'roughness', 0, 1)
+	// folder3.add(sphereMaterial, 'metalness', 0, 1)
+	// folder3.add(planeMaterial, 'metalness', 0, 1)
+	folder3.open()
+
+
+
+	// --------------- Add ----------------------------
+	scene.add(box)
 	scene.add(plane)
 	scene.add(directionalLight)
 	// scene.add(helper)
-	// scene.add(ambientLight)
 
 
+	// ---------------- Camera ----------------------------
 	var camera = new THREE.PerspectiveCamera(
 		45,
 		window.innerWidth/window.innerHeight,
@@ -65,75 +103,13 @@ function init(){
 		1000
 	)
 
-	var cameraZRotation = new THREE.Group()
-	var cameraYPosition = new THREE.Group()
-	var cameraZPosition = new THREE.Group()
-	var cameraXRotation = new THREE.Group()
-	var cameraYRotation = new THREE.Group()
 
-	cameraZRotation.name = 'cameraZRotation'
-	cameraYPosition.name = 'cameraYPosition'
-	cameraZPosition.name = 'cameraZPosition'
-	cameraXRotation.name = 'cameraXRotation'
-	cameraYRotation.name = 'cameraYRotation'
+	camera.position.y = 5
+	camera.position.z = 5
 
-	cameraZRotation.add(camera)
-	cameraYPosition.add(cameraZRotation)
-	cameraZPosition.add(cameraYPosition)
-	cameraXRotation.add(cameraZPosition)
-	cameraYRotation.add(cameraXRotation)
-	scene.add(cameraYRotation)
+	camera.lookAt(new THREE.Vector3(0, 0, 0))
 
-	zPosition = 100
-	cameraYRotation.position.y = 1
-	cameraZPosition.position.z = zPosition
-	cameraXRotation.rotation.x = -Math.PI/2
-
-	new TWEEN.Tween({val: 100})
-		.to({val: -50}, 12000)
-		.onUpdate(function() {
-			cameraZPosition.position.z = this.val
-		})
-		.start()
-
-	new TWEEN.Tween({val: -Math.PI/2})
-		.to({val: 0}, 6000)
-		.delay(1000)
-		.easing(TWEEN.Easing.Quadratic.InOut)
-		.onUpdate(function(){
-			cameraXRotation.rotation.x = this.val
-		})
-		.start()
-
-	new TWEEN.Tween({val: 0})
-		.to({val: Math.PI/2}, 6000)
-		.delay(1000)
-		.easing(TWEEN.Easing.Quadratic.InOut)
-		.onUpdate(function(){
-			cameraYRotation.rotation.y = this.val
-		})
-		.start()
-
-	gui.add(cameraXRotation.rotation, 'x', -Math.PI, Math.PI)
-	gui.add(cameraYRotation.rotation, 'y', -Math.PI, Math.PI)
-	gui.add(cameraZRotation.rotation, 'z', -Math.PI, Math.PI)
-	gui.add(cameraZPosition.position, 'z', 0, zPosition)
-	
-
-	// var camera = new THREE.OrthographicCamera(
-	// 	-15,  // left
-	// 	15,   // right
-	// 	15,   // top
-	// 	-15,  // bottom
-	// 	1,   // near plane
-	// 	1000,  //far plane
-	// )
-
-	// camera.position.x = 1
-	// camera.position.y = 2
-	// camera.position.z = 5
-
-	// camera.lookAt(new THREE.Vector3(0, 0, 0))
+	// -------------- Callback -------------------------
 
 	var renderer = new THREE.WebGLRenderer()
 	renderer.shadowMap.enabled = true
@@ -147,15 +123,51 @@ function init(){
 	update(renderer, scene, camera, controls, clock)
 
 	return scene
+}	
+
+
+// -------------- Get object --------------------
+
+function getMaterial(type, color){
+	var selectedMaterial;
+	var materialOptions = {
+		color: color == undefined ? 'rgb(255, 255, 255)': color
+	}
+	switch(type) {
+		case 'basic':
+			selectedMaterial = new THREE.MeshBasicMaterial(materialOptions)
+			break
+		case 'lambert':
+			selectedMaterial = new THREE.MeshLambertMaterial(materialOptions)
+			break
+		case 'phong':
+			selectedMaterial = new THREE.MeshPhongMaterial(materialOptions)
+			break
+		case 'standard':
+			selectedMaterial = new THREE.MeshStandardMaterial(materialOptions)
+			break
+	}
+
+	return selectedMaterial
 }
 
-function getBox(w, h, d){
+
+// Get plane
+function getPlane(material, size){
+	var geometry = new THREE.PlaneGeometry(size, size)
+	var mesh = new THREE.Mesh(geometry, material)
+	mesh.receiveShadow = true
+
+	return mesh
+}
+
+
+// Get box
+function getBox(material, w, h, d){
 	var geometry = new THREE.BoxGeometry(w, h, d)
-	var material = new THREE.MeshPhongMaterial({
-		color: "rgb(120, 120, 120)"
-	})
 	var mesh = new THREE.Mesh(geometry, material)
 	mesh.castShadow = true
+
 	return mesh
 }
 
@@ -183,33 +195,51 @@ function getBoxGrid(amount, seperationMultiplier){
 	return group
 }
 
-
-function getPlane(size){
-	var geometry = new THREE.PlaneGeometry(size, size)
-	var material = new THREE.MeshPhongMaterial({
-		color: "rgb(120, 120, 120)",
-		side: THREE.DoubleSide
-	})
+// Get sphere
+function getSphere(material, size, segments){
+	var geometry = new THREE.SphereGeometry(size, segments, segments)
 	var mesh = new THREE.Mesh(geometry, material)
-	mesh.receiveShadow = true
+	mesh.castShadow = true
+
 	return mesh
+}
+
+
+// Get cone
+
+
+
+// Get cylinder
+
+
+
+// Get wheel
+
+
+// Get teapot
+
+
+// Get....
+
+
+// Get light
+function getSpotLight(intensity, color) {
+	color = color == undefined ? 'rgb(255, 255, 255):' : color
+	var light = new THREE.SpotLight(color, intensity)
+	light.castShadow = true
+	light.penumbra = 0.5
+
+	// Set up shadow properties for the light
+	light.shadow.bias = 0.001 // adjust glitching between object and plane when shadowing
+	light.shadow.mapSize.width = 2048  // default: 1024
+	light.shadow.mapSize.height = 2048  // default: 1024
+
+	return light
 }
 
 function getPointLight(intensity) {
 	var light = new THREE.PointLight(0xffffff, intensity)
 	light.castShadow = true
-	return light
-}
-
-function getSpotLight(intensity) {
-	var light = new THREE.SpotLight(0xffffff, intensity)
-	light.castShadow = true
-
-	light.shadow.bias = 0.001 // adjust glitching between object and plane when shadowing
-
-	light.shadow.mapSize.width = 2048  // default: 1024
-	light.shadow.mapSize.height = 2048  // default: 1024
-
 	return light
 }
 
@@ -235,24 +265,44 @@ function getAmbientLight(intensity) {
 	return light
 }
 
-function getSphere(size){
-	var geometry = new THREE.SphereGeometry(size, 24, 24)
-	var material = new THREE.MeshBasicMaterial({
-		color: "rgb(255, 255, 255)"
-	})
-	var mesh = new THREE.Mesh(geometry, material)
+// ----------- Style ---------------------
 
-	return mesh
+// Box grid
+function getBorder(object){
+	var geo = new THREE.EdgesGeometry( object.geometry )
+	var mat = new THREE.LineBasicMaterial( { color: "black", linewidth: 10 } )
+	var wireframe = new THREE.LineSegments( geo, mat )
+	wireframe.renderOrder = 1 // make sure wireframes are rendered 2nd
+	return wireframe
 }
+
+
+// -------------- Transformation ------------
+
+
+
+
+// -------------- Texture --------------
+
+
+
+
+
+// ------------- Animation -----------------
+
+
+// 
+
+
 
 function update(renderer, scene, camera, controls, clock) {
 	renderer.render(scene, camera)
 
 	controls.update()
-	TWEEN.update()
+	// TWEEN.update()
 
-	var timeElapsed = clock.getElapsedTime()
-	var speed = 1.5
+	// var timeElapsed = clock.getElapsedTime()
+	// var speed = 1.5
 
 	// var cameraXRotation = scene.getObjectByName('cameraXRotation')
 	// if (cameraXRotation.rotation.x < 0){
@@ -262,20 +312,20 @@ function update(renderer, scene, camera, controls, clock) {
 	// var cameraZPosition = scene.getObjectByName('cameraZPosition')
 	// cameraZPosition.position.z -= 0.25
 
-	var cameraZRotation = scene.getObjectByName('cameraZRotation')
-	cameraZRotation.rotation.z = noise.simplex2(timeElapsed * 1.5, timeElapsed * 1.5) * 0.05
+	// var cameraZRotation = scene.getObjectByName('cameraZRotation')
+	// cameraZRotation.rotation.z = noise.simplex2(timeElapsed * 1.5, timeElapsed * 1.5) * 0.05
 
-	var boxGrid = scene.getObjectByName('boxGrid')
-	boxGrid.children.forEach(function(child, index) {
-		var x = timeElapsed * speed + index
-		// child.scale.y = (Math.sin(x) + 1) / 2  + 0.001
-			// get rid of negative value  cause sin->(-1,1)
-			// get rid of glitch effect when value is 0
+	// var boxGrid = scene.getObjectByName('boxGrid')
+	// boxGrid.children.forEach(function(child, index) {
+	// 	var x = timeElapsed * speed + index
+	// 	// child.scale.y = (Math.sin(x) + 1) / 2  + 0.001
+	// 		// get rid of negative value  cause sin->(-1,1)
+	// 		// get rid of glitch effect when value is 0
 
-		child.scale.y = (noise.simplex2(x, x) + 1) / 2  + 0.001
+	// 	child.scale.y = (noise.simplex2(x, x) + 1) / 2  + 0.001
 
-		child.position.y = child.scale.y/2
-	})
+	// 	child.position.y = child.scale.y/2
+	// })
 
 	// Object Rotation
 	// var box = scene.getObjectByName("box-1")
@@ -286,14 +336,6 @@ function update(renderer, scene, camera, controls, clock) {
 	requestAnimationFrame(function () {
 		update(renderer, scene, camera, controls, clock)
 	})
-}
-
-function getBorder(object){
-	var geo = new THREE.EdgesGeometry( object.geometry )
-	var mat = new THREE.LineBasicMaterial( { color: "black", linewidth: 10 } )
-	var wireframe = new THREE.LineSegments( geo, mat )
-	wireframe.renderOrder = 1 // make sure wireframes are rendered 2nd
-	return wireframe
 }
 
 scene =  init()
