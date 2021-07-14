@@ -6,6 +6,16 @@ function init () {
 	var gui = new dat.GUI()
 	var clock = new THREE.Clock()
 
+	const constants = {
+		side: {
+
+			'THREE.FrontSide': THREE.FrontSide,
+			'THREE.BackSide': THREE.BackSide,
+			'THREE.DoubleSide': THREE.DoubleSide
+
+		},
+	} 
+
 	var enableFog = false
 
 	if (enableFog){
@@ -14,19 +24,20 @@ function init () {
 
 	// Init light
 	var directionalLight = getDirectionalLight(1)
+	var ambientLight = getAmbientLight(100)
 
 	// Init plane
-	var planeMaterial = getMaterial('standard', 'rgb(153, 153, 153)')
+	var planeMaterial = getMaterial2('standard', 'rgb(153, 153, 153)')
 	var plane = getPlane(planeMaterial, 300)
 
 
 	//Init cube/box (hình hộp)
-	var boxMaterial = getMaterial('standard', 'rgb(92, 133, 214)')
-	var box = getBox(sphereMaterial, 30, 30, 30)
-	
+	var boxMaterial = getMaterial2('basic', 'rgb(92, 133, 214)')
+	var box = getBox(sphereMaterial, 5, 5, 5)
+	console.log(box)
 
 	// Init sphere (hình cầu)
-	var sphereMaterial = getMaterial('standard', 'rgb(92, 133, 214)')
+	var sphereMaterial = getMaterial('standard', 'rgb(186, 193, 194)')
 	var sphere = getSphere(sphereMaterial, 1, 24)
 
 
@@ -53,13 +64,13 @@ function init () {
 
 
 	// Init helper
-	// var helper = new THREE.CameraHelper(directionalLight.shadow.camera)
+	var helper = new THREE.CameraHelper(directionalLight.shadow.camera)
 
 	// ---------------- Manipulate materials --------------
 
 	// Plane
 	plane.rotation.x = Math.PI/2
-	plane.position.y = -100
+	plane.position.y = -50
 
 	// Sphere
 	sphere.position.y = sphere.geometry.parameters.radius	
@@ -90,8 +101,8 @@ function init () {
 
 	// --------------- Add ----------------------------
 	scene.add(box)
-	scene.add(plane)
-	scene.add(directionalLight)
+	// scene.add(plane)
+	scene.add(ambientLight)
 	// scene.add(helper)
 
 
@@ -104,8 +115,8 @@ function init () {
 	)
 
 
-	camera.position.y = 5
-	camera.position.z = 5
+	camera.position.y = 20
+	camera.position.z = 20
 
 	camera.lookAt(new THREE.Vector3(0, 0, 0))
 
@@ -133,6 +144,32 @@ function getMaterial(type, color){
 	var materialOptions = {
 		color: color == undefined ? 'rgb(255, 255, 255)': color
 	}
+	switch(type) {
+		case 'basic':
+			selectedMaterial = new THREE.MeshBasicMaterial(materialOptions)
+			break
+		case 'lambert':
+			selectedMaterial = new THREE.MeshLambertMaterial(materialOptions)
+			break
+		case 'phong':
+			selectedMaterial = new THREE.MeshPhongMaterial(materialOptions)
+			break
+		case 'standard':
+			selectedMaterial = new THREE.MeshStandardMaterial(materialOptions)
+			break
+	}
+
+	return selectedMaterial
+}
+
+function getMaterial2(type, color){
+	var selectedMaterial;
+	console.log(color)
+	var materialOptions = {
+		color: color == undefined ? 'rgb(255, 255, 255)': color,
+		side: THREE.DoubleSide
+	}
+	console.log(materialOptions)
 	switch(type) {
 		case 'basic':
 			selectedMaterial = new THREE.MeshBasicMaterial(materialOptions)
@@ -261,7 +298,7 @@ function getDirectionalLight(intensity) {
 }
 
 function getAmbientLight(intensity) {
-	var light = new THREE.AmbientLight('rgb(10, 30, 50)', intensity)
+	var light = new THREE.AmbientLight(0x404040, intensity)
 	return light
 }
 
@@ -274,6 +311,96 @@ function getBorder(object){
 	var wireframe = new THREE.LineSegments( geo, mat )
 	wireframe.renderOrder = 1 // make sure wireframes are rendered 2nd
 	return wireframe
+}
+
+// -------------- GUI ---------------
+function guiScene( gui, scene ) {
+
+	const folder = gui.addFolder( 'Scene' );
+
+	const data = {
+		background: '#000000',
+		'ambient light': ambientLight.color.getHex()
+	};
+
+	folder.addColor( data, 'ambient light' ).onChange( handleColorChange( ambientLight.color ) );
+
+	guiSceneFog( folder, scene );
+
+}
+
+function guiSceneFog( folder, scene ) {
+
+	const fogFolder = folder.addFolder( 'scene.fog' );
+
+	const fog = new THREE.Fog( 0x3f7b9d, 0, 60 );
+
+	const data = {
+		fog: {
+			'THREE.Fog()': false,
+			'scene.fog.color': fog.color.getHex()
+		}
+	};
+
+	fogFolder.add( data.fog, 'THREE.Fog()' ).onChange( function ( useFog ) {
+
+		if ( useFog ) {
+
+			scene.fog = fog;
+
+		} else {
+
+			scene.fog = null;
+
+		}
+
+	} );
+
+	fogFolder.addColor( data.fog, 'scene.fog.color' ).onChange( handleColorChange( fog.color ) );
+
+}
+
+function guiMaterial( gui, mesh, material, geometry ) {
+
+	const folder = gui.addFolder( 'THREE.Material' );
+
+	folder.add( material, 'transparent' );
+	folder.add( material, 'opacity', 0, 1 ).step( 0.01 );
+	folder.add( material, 'alphaTest', 0, 1 ).step( 0.01 ).onChange( needsUpdate( material, geometry ) );
+	folder.add( material, 'visible' );
+	folder.add( material, 'side', constants.side ).onChange( needsUpdate( material, geometry ) );
+
+}
+
+function guiMeshStandardMaterial( gui, mesh, material, geometry ) {
+
+	const data = {
+		color: material.color.getHex(),
+		emissive: material.emissive.getHex(),
+		envMaps: envMapKeys[ 0 ],
+		map: diffuseMapKeys[ 0 ],
+		roughnessMap: roughnessMapKeys[ 0 ],
+		alphaMap: alphaMapKeys[ 0 ]
+	};
+
+	const folder = gui.addFolder( 'THREE.MeshStandardMaterial' );
+
+	folder.addColor( data, 'color' ).onChange( handleColorChange( material.color ) );
+	folder.addColor( data, 'emissive' ).onChange( handleColorChange( material.emissive ) );
+
+	folder.add( material, 'roughness', 0, 1 );
+	folder.add( material, 'metalness', 0, 1 );
+	folder.add( material, 'flatShading' ).onChange( needsUpdate( material, geometry ) );
+	folder.add( material, 'wireframe' );
+	folder.add( material, 'vertexColors' ).onChange( needsUpdate( material, geometry ) );
+	folder.add( material, 'fog' );
+	folder.add( data, 'envMaps', envMapKeys ).onChange( updateTexture( material, 'envMap', envMaps ) );
+	folder.add( data, 'map', diffuseMapKeys ).onChange( updateTexture( material, 'map', diffuseMaps ) );
+	folder.add( data, 'roughnessMap', roughnessMapKeys ).onChange( updateTexture( material, 'roughnessMap', roughnessMaps ) );
+	folder.add( data, 'alphaMap', alphaMapKeys ).onChange( updateTexture( material, 'alphaMap', alphaMaps ) );
+
+	// TODO metalnessMap
+
 }
 
 
@@ -291,9 +418,35 @@ function getBorder(object){
 // ------------- Animation -----------------
 
 
-// 
+// ------------- Event ----------------------
+function handleColorChange( color ) {
 
+	return function ( value ) {
 
+		if ( typeof value === 'string' ) {
+
+			value = value.replace( '#', '0x' );
+
+		}
+
+		color.setHex( value );
+
+	};
+}
+
+function needsUpdate( material, geometry ) {
+
+	return function () {
+
+		material.vertexColors = material.vertexColors;
+		material.side = parseInt( material.side ); //Ensure number
+		material.needsUpdate = true;
+		geometry.attributes.position.needsUpdate = true;
+		geometry.attributes.normal.needsUpdate = true;
+		geometry.attributes.color.needsUpdate = true;
+
+	};
+}
 
 function update(renderer, scene, camera, controls, clock) {
 	renderer.render(scene, camera)
@@ -340,4 +493,4 @@ function update(renderer, scene, camera, controls, clock) {
 
 scene =  init()
 
-var box1 = getBox(1, 1, 1)
+console.log(window.scene)
