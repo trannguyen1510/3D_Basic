@@ -1,4 +1,4 @@
-function init () {
+function init (option) {
 	// -------------- Init ------------------
 
 	// Init global var
@@ -16,55 +16,21 @@ function init () {
 		},
 	} 
 
-	var enableFog = false
-
-	if (enableFog){
-		scene.fog = new THREE.FogExp2(0xffffff, 0.01)
-	}
-
 	// Init light
-	var directionalLight = getDirectionalLight(1)
+	// var directionalLight = getDirectionalLight(1)
 	var ambientLight = getAmbientLight(100)
 
 	// Init plane
 	var planeMaterial = getMaterial2('standard', 'rgb(153, 153, 153)')
 	var plane = getPlane(planeMaterial, 300)
 
-
-	//Init cube/box (hình hộp)
-	var boxMaterial = getMaterial2('basic', 'rgb(92, 133, 214)')
-	var box = getBox(sphereMaterial, 5, 5, 5)
-	console.log(box)
-
-	// Init sphere (hình cầu)
-	var sphereMaterial = getMaterial('standard', 'rgb(186, 193, 194)')
-	var sphere = getSphere(sphereMaterial, 1, 24)
-
-
-	// Init cone (hình nón)
-
-
-
-	// Init cylinder (hình trụ)
-
-
-
-	// Init wheel (bánh xe)
-
-
-
-	// Init tea pot (ấm trà)
-
-
-	// Init multiple boxs
-	var boxGrid = getBoxGrid(20, 2.5)
-
-
-	// Init....
+	// Init object
+	var objectMaterial = getMaterial('basic', 'rgb(92, 133, 214)')
+	var object = getObject(option, 2, objectMaterial)
 
 
 	// Init helper
-	var helper = new THREE.CameraHelper(directionalLight.shadow.camera)
+	// var helper = new THREE.CameraHelper(directionalLight.shadow.camera)
 
 	// ---------------- Manipulate materials --------------
 
@@ -73,34 +39,21 @@ function init () {
 	plane.position.y = -50
 
 	// Sphere
-	sphere.position.y = sphere.geometry.parameters.radius	
+	// sphere.position.y = sphere.geometry.parameters.radius
 
 
 	// Light
-	directionalLight.position.x = 13
-	directionalLight.position.y = 10
-	directionalLight.position.z = 10
-	directionalLight.intensity = 2
+	// directionalLight.position.x = 13
+	// directionalLight.position.y = 10
+	// directionalLight.position.z = 10
+	// directionalLight.intensity = 2
+
 	// Texture
 
 
 
-
-	// ---------------- dat.gui -------------
-	var folder3 = gui.addFolder('material')
-	// folder3.add(sphereMaterial, 'shininess', 0, 1000)  // only for phong material
-	// folder3.add(planeMaterial, 'shininess', 0, 1000)
-
-	// folder3.add(sphereMaterial, 'roughness', 0, 1)
-	// folder3.add(planeMaterial, 'roughness', 0, 1)
-	// folder3.add(sphereMaterial, 'metalness', 0, 1)
-	// folder3.add(planeMaterial, 'metalness', 0, 1)
-	folder3.open()
-
-
-
 	// --------------- Add ----------------------------
-	scene.add(box)
+	scene.add(object)
 	// scene.add(plane)
 	scene.add(ambientLight)
 	// scene.add(helper)
@@ -114,9 +67,9 @@ function init () {
 		1000
 	)
 
-
-	camera.position.y = 20
-	camera.position.z = 20
+	camera.position.x = 5;
+	camera.position.y = 10;
+	camera.position.z = 10;
 
 	camera.lookAt(new THREE.Vector3(0, 0, 0))
 
@@ -138,6 +91,34 @@ function init () {
 
 
 // -------------- Get object --------------------
+function getObject(type, size, material) {
+	var object
+	var segmentMultiplier = 1
+	switch (type) {
+		case 'box':
+			object = new THREE.BoxGeometry(size, size, size)
+			break
+		case 'sphere':
+			object = new THREE.SphereGeometry(size, 32*segmentMultiplier, 32*segmentMultiplier)
+			break
+		case 'cone':
+			object = new THREE.ConeGeometry(size, size, 256*segmentMultiplier)
+			break;
+		case 'cylinder':
+			break
+		case 'wheel':
+			break
+		case 'tea pot':
+			break
+		default:
+			break
+	}
+	var obj = new THREE.Mesh(object, material)
+	obj.castShadow = true
+	obj.name = type
+	obj.position.set(0,size,0)
+	return obj
+}
 
 function getMaterial(type, color){
 	var selectedMaterial;
@@ -198,16 +179,6 @@ function getPlane(material, size){
 	return mesh
 }
 
-
-// Get box
-function getBox(material, w, h, d){
-	var geometry = new THREE.BoxGeometry(w, h, d)
-	var mesh = new THREE.Mesh(geometry, material)
-	mesh.castShadow = true
-
-	return mesh
-}
-
 function getBoxGrid(amount, seperationMultiplier){
 	var group = new THREE.Group()
 
@@ -231,33 +202,6 @@ function getBoxGrid(amount, seperationMultiplier){
 
 	return group
 }
-
-// Get sphere
-function getSphere(material, size, segments){
-	var geometry = new THREE.SphereGeometry(size, segments, segments)
-	var mesh = new THREE.Mesh(geometry, material)
-	mesh.castShadow = true
-
-	return mesh
-}
-
-
-// Get cone
-
-
-
-// Get cylinder
-
-
-
-// Get wheel
-
-
-// Get teapot
-
-
-// Get....
-
 
 // Get light
 function getSpotLight(intensity, color) {
@@ -491,6 +435,4 @@ function update(renderer, scene, camera, controls, clock) {
 	})
 }
 
-scene =  init()
-
-console.log(window.scene)
+export { init }
