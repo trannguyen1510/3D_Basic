@@ -3,7 +3,7 @@ function init(){
 	var gui = new dat.GUI()
 	var clock = new THREE.Clock()
 
-	var enableFog = true
+	var enableFog = false
 
 	if (enableFog){
 		scene.fog = new THREE.FogExp2(0xffffff, 0.01)
