@@ -36,6 +36,23 @@
                                 <a class="dropdown-item object-option" href="javascript:void(0)">Box</a>
                                 <a class="dropdown-item object-option" href="javascript:void(0)">Sphere</a>
                                 <a class="dropdown-item object-option" href="javascript:void(0)">Cone</a>
+                                <a class="dropdown-item object-option" href="javascript:void(0)">Teapot</a>
+                                <a class="dropdown-item object-option" href="javascript:void(0)">Car</a>
+
+
+                            </div>
+                        </li>
+                    </ul>
+
+					<ul class="navbar-nav mr-auto">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Material
+                              </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <a class="dropdown-item material-option" href="javascript:void(0)">Point</a>
+                                <a class="dropdown-item material-option" href="javascript:void(0)">Solid</a>
+                                <a class="dropdown-item material-option" href="javascript:void(0)">Line</a>
                             </div>
                         </li>
                     </ul>
@@ -50,6 +67,7 @@
 	<script src="/lib/Tween.js"></script>
 	<script src="/lib/three.js"></script>
 	<script src="/lib/OrbitControls.js"></script>
+	<script src="/lib/TeapotGeometry.js"></script>
 	<script src="/lib/dat.gui.min.js"></script>
 	<script src="/lib/perlin.js"></script>
 	<script type="module" src='./main.js'></script>
@@ -68,6 +86,19 @@
                 scene = init(object);
             }
         })
+		// meterial
+		// var material;
+		// var materialOption = document.querySelectorAll('.material-option');
+		// materialOption.forEach(option => 
+        // {
+        //     option.onclick = () => 
+        //     {
+        //         $('.a').remove();
+        //         document.getElementById('webgl').innerHTML='';
+        //         // material = option.innerText.toLowerCase();
+        //         scene = init(material);
+        //     }
+        // })
     </script>
 </body>
 </html>
