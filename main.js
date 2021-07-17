@@ -1,10 +1,12 @@
-function init (option) {
-	// -------------- Init ------------------
+let object, camera, light, plane, controls, material
 
-	// Init global var
-	var scene = new THREE.Scene()
-	var gui = new dat.GUI()
-	var clock = new THREE.Clock()
+const scene = new THREE.Scene()
+let renderer = new THREE.WebGLRenderer({ antialias: true })
+let gui = new dat.GUI();
+gui.domElement.id = 'gui'
+
+
+function init () {
 
 	const constants = {
 		side: {
@@ -14,20 +16,16 @@ function init (option) {
 			'THREE.DoubleSide': THREE.DoubleSide
 
 		},
-	} 
+	}
 
 	// Init light
-	// var directionalLight = getDirectionalLight(1)
+	var directionalLight = getDirectionalLight(1)
 	var ambientLight = getAmbientLight(100)
 
 	// Init plane
-	var planeMaterial = getMaterial2('standard', 'rgb(153, 153, 153)')
+	var planeMaterial = getMaterial2('basic', 'rgb(153, 153, 153)')
 	var plane = getPlane(planeMaterial, 300)
-
-	// Init object
-	var objectMaterial = getMaterial('basic', 'rgb(92, 133, 214)')
-	var object = getObject(option, 2, objectMaterial)
-
+	plane.name = 'plane'
 
 	// Init helper
 	// var helper = new THREE.CameraHelper(directionalLight.shadow.camera)
@@ -36,31 +34,30 @@ function init (option) {
 
 	// Plane
 	plane.rotation.x = Math.PI/2
-	plane.position.y = -50
+	plane.position.y = -10
 
 	// Sphere
 	// sphere.position.y = sphere.geometry.parameters.radius
 
 
 	// Light
-	// directionalLight.position.x = 13
-	// directionalLight.position.y = 10
-	// directionalLight.position.z = 10
-	// directionalLight.intensity = 2
+	directionalLight.position.x = 13
+	directionalLight.position.y = 10
+	directionalLight.position.z = 10
+	directionalLight.intensity = 2
 
 	// Texture
 
 
 
 	// --------------- Add ----------------------------
-	scene.add(object)
-	// scene.add(plane)
-	scene.add(ambientLight)
+	scene.add(plane)
+	scene.add(directionalLight)
 	// scene.add(helper)
 
 
 	// ---------------- Camera ----------------------------
-	var camera = new THREE.PerspectiveCamera(
+	camera = new THREE.PerspectiveCamera(
 		45,
 		window.innerWidth/window.innerHeight,
 		1,
@@ -75,36 +72,66 @@ function init (option) {
 
 	// -------------- Callback -------------------------
 
-	var renderer = new THREE.WebGLRenderer()
 	renderer.shadowMap.enabled = true
 	renderer.setSize(window.innerWidth, window.innerHeight)
 	renderer.setClearColor("rgb(120, 120, 120)")
 	document.getElementById("webgl").appendChild(renderer.domElement)
 	renderer.render(scene, camera)
 
-	var controls = new THREE.OrbitControls(camera, renderer.domElement)
+	controls = new THREE.OrbitControls(camera, renderer.domElement)
 
-	update(renderer, scene, camera, controls, clock)
+	update(renderer, scene, camera, controls)
+}
 
-	return scene
-}	
+function addObjectEvent(option){
+	if (object !== undefined) {
+        scene.remove(object)
+    }
+    if (light !== undefined) {
+        material = 'standard'
+    }
+    else {
+        material = 'basic'
+    }
+	let objectMaterial = getMaterial(material, 'rgb(92, 133, 214)')
+	object = getObject(option, 2, objectMaterial)
+	scene.add(object)
+	update(renderer, scene, camera, controls)
+}
+
+function addLightEvent(opt){
+
+	// Code here
+}
+
+function addStyleEvent(opt){
+	if (object !== undefined) {
+        scene.remove(object)
+    }
+    material = 'line'
+	let objectMaterial = getMaterial(material, 'rgb(92, 133, 214)')
+	object = getObject(option, 2, objectMaterial)
+	scene.add(object)
+	update(renderer, scene, camera, controls)
+}
 
 
 // -------------- Get object --------------------
 function getObject(type, size, material) {
-	var object
+	var geometry
 	var segmentMultiplier = 1
 	switch (type) {
 		case 'box':
-			object = new THREE.BoxGeometry(size, size, size)
+			geometry = new THREE.BoxGeometry(size, size, size)
 			break
 		case 'sphere':
-			object = new THREE.SphereGeometry(size, 32*segmentMultiplier, 32*segmentMultiplier)
+			geometry = new THREE.SphereGeometry(size, 32*segmentMultiplier, 32*segmentMultiplier)
 			break
 		case 'cone':
-			object = new THREE.ConeGeometry(size, size, 256*segmentMultiplier)
+			geometry = new THREE.ConeGeometry(size, size, 256*segmentMultiplier)
 			break;
 		case 'cylinder':
+			geometry = new THREE.CylinderGeometry(size, size, 4*segmentMultiplier)
 			break
 		case 'wheel':
 			break
@@ -113,7 +140,7 @@ function getObject(type, size, material) {
 		default:
 			break
 	}
-	var obj = new THREE.Mesh(object, material)
+	var obj = new THREE.Mesh(geometry, material)
 	obj.castShadow = true
 	obj.name = type
 	obj.position.set(0,size,0)
@@ -138,6 +165,12 @@ function getMaterial(type, color){
 		case 'standard':
 			selectedMaterial = new THREE.MeshStandardMaterial(materialOptions)
 			break
+		case 'line':
+			selectedMaterial = new THREE.LineBasicMaterial(materialOptions)
+			break
+		default:
+			selectedMaterial = new THREE.MeshBasicMaterial(materialOptions)
+
 	}
 
 	return selectedMaterial
@@ -145,12 +178,10 @@ function getMaterial(type, color){
 
 function getMaterial2(type, color){
 	var selectedMaterial;
-	console.log(color)
 	var materialOptions = {
 		color: color == undefined ? 'rgb(255, 255, 255)': color,
 		side: THREE.DoubleSide
 	}
-	console.log(materialOptions)
 	switch(type) {
 		case 'basic':
 			selectedMaterial = new THREE.MeshBasicMaterial(materialOptions)
@@ -167,6 +198,29 @@ function getMaterial2(type, color){
 	}
 
 	return selectedMaterial
+}
+
+function getStyleObject(type, size, material) {
+	var geometry
+	var segmentMultiplier = 1
+	switch (type) {
+		case 'point':
+			geometry = new THREE.BoxGeometry(size, size, size)
+			break
+		case 'line':
+			geometry = new THREE.SphereGeometry(size, 32*segmentMultiplier, 32*segmentMultiplier)
+			break
+		case 'solid':
+			geometry = new THREE.ConeGeometry(size, size, 256*segmentMultiplier)
+			break
+		default:
+			break
+	}
+	var obj = new THREE.Mesh(geometry, material)
+	obj.castShadow = true
+	obj.name = type
+	obj.position.set(0,size,0)
+	return obj
 }
 
 
@@ -392,7 +446,7 @@ function needsUpdate( material, geometry ) {
 	};
 }
 
-function update(renderer, scene, camera, controls, clock) {
+function update(renderer, scene, camera, controls) {
 	renderer.render(scene, camera)
 
 	controls.update()
@@ -431,8 +485,36 @@ function update(renderer, scene, camera, controls, clock) {
 	// box.rotation.y += 0.001
 	// box.rotation.z += 0.001
 	requestAnimationFrame(function () {
-		update(renderer, scene, camera, controls, clock)
+		update(renderer, scene, camera, controls)
 	})
 }
 
-export { init }
+let opt
+let objectOption = document.querySelectorAll('.object-option')
+let materialOption = document.querySelectorAll('.material-option')
+
+let basic = document.querySelector('.basic')
+let phong = document.querySelector('.phong')
+let standard = document.querySelector('.standard')
+
+function clickEvent() {
+    objectOption.forEach(option => 
+    {
+        option.onclick = () => 
+        {
+            opt = option.innerText.toLowerCase()
+            addObjectEvent(opt)
+        }
+    })
+
+    materialOption.forEach(option => 
+    {
+        option.onclick = () =>
+        {
+            opt = option.innerText.toLowerCase()
+            addObject(opt)
+        }
+    })
+}
+init()
+clickEvent()

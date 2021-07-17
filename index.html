@@ -36,10 +36,32 @@
                                 <a class="dropdown-item object-option" href="javascript:void(0)">Box</a>
                                 <a class="dropdown-item object-option" href="javascript:void(0)">Sphere</a>
                                 <a class="dropdown-item object-option" href="javascript:void(0)">Cone</a>
+                                <a class="dropdown-item object-option" href="javascript:void(0)">Cylinder</a>
+                            </div>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Light
+                              </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <a class="dropdown-item material-option" href="javascript:void(0)">Directional</a>
+                                <a class="dropdown-item material-option" href="javascript:void(0)">Point</a>
+                                <a class="dropdown-item material-option" href="javascript:void(0)">Ambient</a>
+                            </div>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Style
+                              </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <a class="dropdown-item style-option" href="javascript:void(0)">Point</a>
+                                <a class="dropdown-item style-option" href="javascript:void(0)">Line</a>
+                                <a class="dropdown-item style-option" href="javascript:void(0)">Solid</a>
                             </div>
                         </li>
                     </ul>
-                </div>   
+                </div>
             </nav>
         </div>
         <div id="webgl">
@@ -53,21 +75,5 @@
 	<script src="/lib/dat.gui.min.js"></script>
 	<script src="/lib/perlin.js"></script>
 	<script type="module" src='./main.js'></script>
-    <script type="module">
-        import {init} from "./main.js";
-        var objectOption = document.querySelectorAll('.object-option');
-        var scene;
-        var object;
-        objectOption.forEach(option => 
-        {
-            option.onclick = () => 
-            {
-                $('.a').remove();
-                document.getElementById('webgl').innerHTML='';
-                object = option.innerText.toLowerCase();
-                scene = init(object);
-            }
-        })
-    </script>
 </body>
 </html>
