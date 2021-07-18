@@ -1,4 +1,4 @@
-let object, camera, light, plane, controls, material
+let object, style, camera, light, plane, controls, material
 
 const scene = new THREE.Scene()
 let renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -49,14 +49,12 @@ function init () {
 		1000
 	)
 
-
-
-
 	camera.position.x = 5;
 	camera.position.y = 10;
 	camera.position.z = 10;
 
 	camera.lookAt(new THREE.Vector3(0, 0, 0))
+	
 
 	// -------------- Callback -------------------------
 
@@ -93,12 +91,11 @@ function addLightEvent(opt){
 }
 
 function addStyleEvent(opt){
+	let style = object.clone()
 	if (object !== undefined) {
         scene.remove(object)
     }
-    material = 'line'
-	let objectMaterial = getMaterial(material, 'rgb(92, 133, 214)')
-	object = getObject(option, 2, objectMaterial)
+	object = getStyleObject(opt, 2, style)
 	scene.add(object)
 	update(renderer, scene, camera, controls)
 }
@@ -133,6 +130,34 @@ function getObject(type, size, material) {
 	obj.name = type
 	obj.position.set(0,size,0)
 	return obj
+}
+
+function getStyleObject(type, size, obj) {
+	let geometry, material, styleObj
+	let segmentMultiplier = 1
+	switch (type) {
+		case 'point':
+			break
+		case 'line':
+			styleObj = getBorder(obj)
+			break
+		case 'solid':
+			geometry = new THREE.ConeGeometry(size, size, 256*segmentMultiplier)
+			break
+		default:
+			break
+	}
+	styleObj.name = type
+	styleObj.position.set(0,size,0)
+	return styleObj
+}
+
+function getBorder(object){
+	var geo = new THREE.WireframeGeometry( object.geometry )
+	var mat = new THREE.LineBasicMaterial( { color: "black", linewidth: 20 } )
+	var wireframe = new THREE.LineSegments( geo, mat )
+	wireframe.renderOrder = 1 // make sure wireframes are rendered 2nd
+	return wireframe
 }
 
 function getMaterial(type, color){
@@ -188,59 +213,12 @@ function getMaterial2(type, color){
 	return selectedMaterial
 }
 
-function getStyleObject(type, size, material) {
-	var geometry
-	var segmentMultiplier = 1
-	switch (type) {
-		case 'point':
-			geometry = new THREE.BoxGeometry(size, size, size)
-			break
-		case 'line':
-			geometry = new THREE.SphereGeometry(size, 32*segmentMultiplier, 32*segmentMultiplier)
-			break
-		case 'solid':
-			geometry = new THREE.ConeGeometry(size, size, 256*segmentMultiplier)
-			break
-		default:
-			break
-	}
-	var obj = new THREE.Mesh(geometry, material)
-	obj.castShadow = true
-	obj.name = type
-	obj.position.set(0,size,0)
-	return obj
-}
-
 function getPlane(material, size){
 	var geometry = new THREE.PlaneGeometry(size, size)
 	var mesh = new THREE.Mesh(geometry, material)
 	mesh.receiveShadow = true
 
 	return mesh
-}
-
-function getBoxGrid(amount, seperationMultiplier){
-	var group = new THREE.Group()
-
-	for (var i=0; i<amount; i++){
-		var obj = getBox(1, 3, 1)
-		obj.position.x = i * seperationMultiplier
-		obj.position.y = obj.geometry.parameters.height/2
-		group.add(obj)
-
-		for (var j=0; j<amount; j++){
-			var obj = getBox(1, 3, 1)
-			obj.position.x = i * seperationMultiplier
-			obj.position.y = obj.geometry.parameters.height/2
-			obj.position.z = j * seperationMultiplier
-			group.add(obj)
-		}
-	}
-
-	group.position.x = -(seperationMultiplier * (amount-1))/2
-	group.position.z = -(seperationMultiplier * (amount-1))/2
-
-	return group
 }
 
 function getLight(type, size, material) {
@@ -464,17 +442,10 @@ function update(renderer, scene, camera, controls) {
 	})
 }
 
-function getBorder(object){
-	var geo = new THREE.EdgesGeometry( object.geometry )
-	var mat = new THREE.LineBasicMaterial( { color: "black", linewidth: 10 } )
-	var wireframe = new THREE.LineSegments( geo, mat )
-	wireframe.renderOrder = 1 // make sure wireframes are rendered 2nd
-	return wireframe
-}
-
 let opt
 let objectOption = document.querySelectorAll('.object-option')
-let materialOption = document.querySelectorAll('.material-option')
+let lightOption = document.querySelectorAll('.light-option')
+let styleOption = document.querySelectorAll('.style-option')
 
 let basic = document.querySelector('.basic')
 let phong = document.querySelector('.phong')
@@ -490,12 +461,21 @@ function clickEvent() {
         }
     })
 
-    materialOption.forEach(option =>
+    lightOption.forEach(option =>
     {
         option.onclick = () =>
         {
             opt = option.innerText.toLowerCase()
             addObject(opt)
+        }
+    })
+
+    styleOption.forEach(option =>
+    {
+        option.onclick = () =>
+        {
+            opt = option.innerText.toLowerCase()
+            addStyleEvent(opt)
         }
     })
 }
