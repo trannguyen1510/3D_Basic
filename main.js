@@ -1,4 +1,4 @@
-let object, style, camera, light, plane, controls, material
+let object, style, camera, light, plane, controls, material, color
 
 const scene = new THREE.Scene()
 let renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -19,7 +19,7 @@ function init () {
 
 	// Init plane
 	var planeMaterial = getMaterial2('basic', 'rgb(153, 153, 153)')
-	var plane = getPlane(planeMaterial, 300)
+	var plane = getPlane(planeMaterial, 500)
 	plane.name = 'plane'
 
 	// Init helper
@@ -30,7 +30,7 @@ function init () {
 
 	// Plane
 	plane.rotation.x = Math.PI/2
-	plane.position.y = -10
+	plane.position.y = -50
 
 	// Sphere
 	// sphere.position.y = sphere.geometry.parameters.radius
@@ -49,12 +49,12 @@ function init () {
 		1000
 	)
 
-	camera.position.x = 5;
-	camera.position.y = 10;
-	camera.position.z = 10;
+	camera.position.x = 25
+	camera.position.y = 100
+	camera.position.z = 50
 
 	camera.lookAt(new THREE.Vector3(0, 0, 0))
-	
+
 
 	// -------------- Callback -------------------------
 
@@ -72,6 +72,13 @@ function init () {
 function addObjectEvent(option){
 	if (object !== undefined) {
         scene.remove(object)
+        object.geometry.dispose()
+        object.material.dispose()
+    }
+    if (style !== undefined) {
+        scene.remove(style)
+        style.geometry.dispose()
+        style.material.dispose()
     }
     if (light !== undefined) {
         material = 'standard'
@@ -79,8 +86,9 @@ function addObjectEvent(option){
     else {
         material = 'basic'
     }
-	let objectMaterial = getMaterial(material, 'rgb(92, 133, 214)')
-	object = getObject(option, 2, objectMaterial)
+    color = 'rgb(92, 133, 214)'
+	let objectMaterial = getMaterial(material, color)
+	object = getObject(option, 20, objectMaterial)
 	scene.add(object)
 	update(renderer, scene, camera, controls)
 }
@@ -91,12 +99,16 @@ function addLightEvent(opt){
 }
 
 function addStyleEvent(opt){
-	let style = object.clone()
+	if (style !== undefined) {
+        scene.remove(style)
+        style.geometry.dispose()
+        style.material.dispose()
+    }
 	if (object !== undefined) {
         scene.remove(object)
     }
-	object = getStyleObject(opt, 2, style)
-	scene.add(object)
+	style = getStyleObject(opt, 20, object)
+	scene.add(style)
 	update(renderer, scene, camera, controls)
 }
 
@@ -132,18 +144,82 @@ function getObject(type, size, material) {
 	return obj
 }
 
+function box( width, height, depth ) {
+
+				width = width * 0.5,
+				height = height * 0.5,
+				depth = depth * 0.5;
+
+				const geometry = new THREE.BufferGeometry();
+				const position = [];
+
+				position.push(
+					- width, - height, - depth,
+					- width, height, - depth,
+
+					- width, height, - depth,
+					width, height, - depth,
+
+					width, height, - depth,
+					width, - height, - depth,
+
+					width, - height, - depth,
+					- width, - height, - depth,
+
+					- width, - height, depth,
+					- width, height, depth,
+
+					- width, height, depth,
+					width, height, depth,
+
+					width, height, depth,
+					width, - height, depth,
+
+					width, - height, depth,
+					- width, - height, depth,
+
+					- width, - height, - depth,
+					- width, - height, depth,
+
+					- width, height, - depth,
+					- width, height, depth,
+
+					width, height, - depth,
+					width, height, depth,
+
+					width, - height, - depth,
+					width, - height, depth
+				 );
+
+				geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( position, 3 ) );
+
+				return geometry;
+
+			}
+
 function getStyleObject(type, size, obj) {
-	let geometry, material, styleObj
-	let segmentMultiplier = 1
+	let geo, mat, styleObj
+
 	switch (type) {
 		case 'point':
+			geo = obj.geometry
+			mat = new THREE.PointsMaterial( { color: color, size: 2 } )
+			styleObj = new THREE.Points( geo, mat )
 			break
 		case 'line':
-			styleObj = getBorder(obj)
+			geo = new THREE.WireframeGeometry( obj.geometry )
+			mat = new THREE.LineBasicMaterial( { color: color} )
+			styleObj = new THREE.Line( geo, mat )
+			styleObj.renderOrder = 1 // make sure wireframes are rendered 2nd
 			break
 		case 'solid':
-			geometry = new THREE.ConeGeometry(size, size, 256*segmentMultiplier)
+			styleObj = obj.clone()
 			break
+		case "dash":
+			geo = box( 20, 20, 20 )
+			mat = new THREE.LineDashedMaterial( { color: "black" , dashSize: 1, gapSize: 0.5} )
+			styleObj = new THREE.Line( geo, mat )
+			styleObj.computeLineDistances()
 		default:
 			break
 	}
@@ -252,29 +328,18 @@ function getLight(type, size, material) {
 // 	return light
 // }
 
-
-// ----------- Style ---------------------
-// Sphere
-function getSphere(size){
-	var geometry = new THREE.SphereGeometry(size, 24, 24)
-	var material = new THREE.MeshBasicMaterial({
-		color: "rgb(255, 255, 255)"
-	})
-	var mesh = new THREE.Mesh(geometry, material)
-	return mesh
-}
-
 // -------------- GUI ---------------
 function guiScene( gui, scene ) {
 
 	const folder = gui.addFolder( 'Scene' );
-
-	const data = {
+	if (light != undefined) {
+		const data = {
 		background: '#000000',
-		'ambient light': ambientLight.color.getHex()
-	};
+		'ambient light': light.color.getHex()
+		}
 
-	folder.addColor( data, 'ambient light' ).onChange( handleColorChange( ambientLight.color ) );
+	folder.addColor( data, 'ambient light' ).onChange( handleColorChange( light.color ) );
+	}
 
 	guiSceneFog( folder, scene );
 
@@ -441,6 +506,8 @@ function update(renderer, scene, camera, controls) {
 		update(renderer, scene, camera, controls)
 	})
 }
+
+guiScene(gui, scene)
 
 let opt
 let objectOption = document.querySelectorAll('.object-option')
