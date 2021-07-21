@@ -1,9 +1,10 @@
-let object, style, camera, light, plane, controls, material, color
+let object, style, camera, light, plane, controls, material, color, loader
 
 const scene = new THREE.Scene()
 let renderer = new THREE.WebGLRenderer({ antialias: true })
 let gui = new dat.GUI();
 gui.domElement.id = 'gui'
+loader = new THREE.TextureLoader()
 
 
 function init () {
@@ -16,9 +17,15 @@ function init () {
 			'THREE.DoubleSide': THREE.DoubleSide
 		},
 	}
+	let lightGeo = new THREE.SphereGeometry(2, 24, 24)
+	let lightMat = new THREE.MeshBasicMaterial({
+		color: "rgb(255, 255, 255)"
+	})
+	let lightShape = new THREE.Mesh(lightGeo, lightMat)
+	light = getLight('point', 1)
 
 	// Init plane
-	var planeMaterial = getMaterial2('basic', 'rgb(153, 153, 153)')
+	var planeMaterial = getMaterial2('standard', 'rgb(153, 153, 153)')
 	var plane = getPlane(planeMaterial, 500)
 	plane.name = 'plane'
 
@@ -32,6 +39,10 @@ function init () {
 	plane.rotation.x = Math.PI/2
 	plane.position.y = -50
 
+	light.position.x = 20
+	light.position.y = 70
+	light.position.z = 25
+
 	// Sphere
 	// sphere.position.y = sphere.geometry.parameters.radius
 
@@ -39,6 +50,8 @@ function init () {
 
 	// --------------- Add ----------------------------
 	scene.add(plane)
+	light.add(lightShape)
+	scene.add(light)
 	// scene.add(helper)
 
 	// ---------------- Camera ----------------------------
@@ -88,6 +101,7 @@ function addObjectEvent(option){
     }
     color = 'rgb(92, 133, 214)'
 	let objectMaterial = getMaterial(material, color)
+	objectMaterial.name = 'material'
 	object = getObject(option, 20, objectMaterial)
 	scene.add(object)
 	update(renderer, scene, camera, controls)
@@ -127,12 +141,21 @@ function getObject(type, size, material) {
 			geometry = new THREE.ConeGeometry(size, size, 256*segmentMultiplier)
 			break;
 		case 'cylinder':
-			geometry = new THREE.CylinderGeometry(size, size, 4*segmentMultiplier)
+			geometry = new THREE.CylinderGeometry(size, size, 3*size)
 			break
 		case 'wheel':
+			geometry = new THREE.TorusGeometry( size*2/3, size/3, size*2/3, 6*size )
+			if (material.name == 'basic') {
+				material.map = loader.load('/assets/textures/wheel.jpg')
+			}
+			else {
+				material.roughnessMap = loader.load('/assets/textures/wheel.jpg')
+				material.roughness = 1
+				material.metalness = 0
+			}
 			break
-		case 'tea pot':
-			object = new THREE.TeapotGeometry(size, 10)
+		case 'teapot':
+			geometry = new THREE.TeapotGeometry(size*2/3, 10)
 			break
 		default:
 			break
@@ -297,19 +320,18 @@ function getPlane(material, size){
 	return mesh
 }
 
-function getLight(type, size, material) {
-	var light
-	// var segmentMultiplier = 1
+function getLight(type, intensity) {
+	
 	switch (type) {
-		case 'PoinLight':
-			object = new THREE.PointLight(0xffffff, intensity)
+		case 'point':
+			light = new THREE.PointLight(0xffffff, intensity)
 			break
-		case 'DirectionalLight':
-			object = new THREE.DirectionalLight(0xffffff, intensity)
+		case 'directional':
+			light = new THREE.DirectionalLight(0xffffff, intensity)
 			break
-		case 'AmbientLight':
-			object = new THREE.AmbientLight(0xffffff, intensity)
-			break;
+		case 'ambient':
+			light = new THREE.AmbientLight(0xffffff, intensity)
+			break
 	}
     light.castShadow = true
     return light;
@@ -468,40 +490,7 @@ function update(renderer, scene, camera, controls) {
 	renderer.render(scene, camera)
 
 	controls.update()
-	// TWEEN.update()
 
-	// var timeElapsed = clock.getElapsedTime()
-	// var speed = 1.5
-
-	// var cameraXRotation = scene.getObjectByName('cameraXRotation')
-	// if (cameraXRotation.rotation.x < 0){
-	// 	cameraXRotation.rotation.x += 0.01
-	// }
-
-	// var cameraZPosition = scene.getObjectByName('cameraZPosition')
-	// cameraZPosition.position.z -= 0.25
-
-	// var cameraZRotation = scene.getObjectByName('cameraZRotation')
-	// cameraZRotation.rotation.z = noise.simplex2(timeElapsed * 1.5, timeElapsed * 1.5) * 0.05
-
-	// var boxGrid = scene.getObjectByName('boxGrid')
-	// boxGrid.children.forEach(function(child, index) {
-	// 	var x = timeElapsed * speed + index
-	// 	// child.scale.y = (Math.sin(x) + 1) / 2  + 0.001
-	// 		// get rid of negative value  cause sin->(-1,1)
-	// 		// get rid of glitch effect when value is 0
-
-	// 	child.scale.y = (noise.simplex2(x, x) + 1) / 2  + 0.001
-
-	// 	child.position.y = child.scale.y/2
-	// })
-
-	// Object Rotation
-	// var box = scene.getObjectByName("box-1")
-	// box.rotation.x += 0.001
-	// box.rotation.x += 0.001
-	// box.rotation.y += 0.001
-	// box.rotation.z += 0.001
 	requestAnimationFrame(function () {
 		update(renderer, scene, camera, controls)
 	})
