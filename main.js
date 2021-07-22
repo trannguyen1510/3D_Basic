@@ -1,4 +1,5 @@
 let object, style, camera, light, plane, controls, material, color, loader
+let size = 20
 
 const scene = new THREE.Scene()
 let renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -17,17 +18,8 @@ function init () {
 			'THREE.DoubleSide': THREE.DoubleSide
 		},
 	}
-	let lightGeo = new THREE.SphereGeometry(2, 24, 24)
-	let lightMat = new THREE.MeshBasicMaterial({
-		color: "rgb(255, 255, 255)"
-	})
-	let lightShape = new THREE.Mesh(lightGeo, lightMat)
-	light = getLight('point', 1)
 
 	// Init plane
-	var planeMaterial = getMaterial2('standard', 'rgb(153, 153, 153)')
-	var plane = getPlane(planeMaterial, 500)
-	plane.name = 'plane'
 
 	// Init helper
 	// var helper = new THREE.CameraHelper(directionalLight.shadow.camera)
@@ -39,10 +31,6 @@ function init () {
 	plane.rotation.x = Math.PI/2
 	plane.position.y = -50
 
-	light.position.x = 20
-	light.position.y = 70
-	light.position.z = 25
-
 	// Sphere
 	// sphere.position.y = sphere.geometry.parameters.radius
 
@@ -50,8 +38,6 @@ function init () {
 
 	// --------------- Add ----------------------------
 	scene.add(plane)
-	light.add(lightShape)
-	scene.add(light)
 	// scene.add(helper)
 
 	// ---------------- Camera ----------------------------
@@ -83,33 +69,50 @@ function init () {
 }
 
 function addObjectEvent(option){
-	if (object !== undefined) {
+	if (object != undefined) {
         scene.remove(object)
         object.geometry.dispose()
         object.material.dispose()
     }
-    if (style !== undefined) {
+    if (style != undefined) {
         scene.remove(style)
         style.geometry.dispose()
         style.material.dispose()
     }
-    if (light !== undefined) {
+    if (light != undefined) {
         material = 'standard'
     }
     else {
         material = 'basic'
+        console.log('Do here')
     }
     color = 'rgb(92, 133, 214)'
 	let objectMaterial = getMaterial(material, color)
 	objectMaterial.name = 'material'
 	object = getObject(option, 20, objectMaterial)
+	object.name = option
 	scene.add(object)
 	update(renderer, scene, camera, controls)
 }
 
-function addLightEvent(opt){
+function addPlane(option){
+	if (object != undefined) {
+        scene.remove(object)
+        object.geometry.dispose()
+        object.material.dispose()
+    if (light != undefined) {
+        material = 'standard'
+    }
+    else {
+        material = 'basic'
+        console.log('Do here')
+    }
+    let planeMaterial = getMaterial2('basic', 'rgb(153, 153, 153)')
+	plane = getPlane(planeMaterial, 500)
+	plane.name = 'plane'
 
-	// Code here
+	scene.add(plane)
+	update(renderer, scene, camera, controls)
 }
 
 function addStyleEvent(opt){
@@ -121,9 +124,58 @@ function addStyleEvent(opt){
 	if (object !== undefined) {
         scene.remove(object)
     }
-	style = getStyleObject(opt, 20, object)
+	style = getStyleObject(opt, size, object)
 	scene.add(style)
 	update(renderer, scene, camera, controls)
+}
+
+function addLightEvent(opt){
+	// let style = object.clone()
+
+	if (light != undefined) {
+        scene.remove(light)
+		light.dispose()
+    }
+
+	light = getLight(opt, 1.2)
+	
+	let lightGeo = new THREE.SphereGeometry(2, 24, 24)
+	let lightMat = new THREE.MeshBasicMaterial({
+		color: "rgb(255, 255, 255)"
+	})
+	let lightShape = new THREE.Mesh(lightGeo, lightMat)
+
+	light.add(lightShape)
+	scene.add(light)
+
+	light.position.x = 20
+	light.position.y = 70
+	light.position.z = 25
+
+	Guilight(light)
+
+	addObjectEvent(object.name)
+
+
+
+	update(renderer, scene, camera, controls)
+}
+
+function RemoveLight(){
+	scene.children.forEach((e) => {
+        if (e.name === 'light') {
+            scene.remove(e)
+        }
+    })
+    if (light != undefined) {
+        scene.remove(light)
+        light = undefined
+    }
+	gui.remove(folder)
+
+	addObjectEvent(object.name)
+
+    update(renderer, scene, camera, controls)
 }
 
 // -------------- Get object --------------------
@@ -167,59 +219,6 @@ function getObject(type, size, material) {
 	return obj
 }
 
-function box( width, height, depth ) {
-
-				width = width * 0.5,
-				height = height * 0.5,
-				depth = depth * 0.5;
-
-				const geometry = new THREE.BufferGeometry();
-				const position = [];
-
-				position.push(
-					- width, - height, - depth,
-					- width, height, - depth,
-
-					- width, height, - depth,
-					width, height, - depth,
-
-					width, height, - depth,
-					width, - height, - depth,
-
-					width, - height, - depth,
-					- width, - height, - depth,
-
-					- width, - height, depth,
-					- width, height, depth,
-
-					- width, height, depth,
-					width, height, depth,
-
-					width, height, depth,
-					width, - height, depth,
-
-					width, - height, depth,
-					- width, - height, depth,
-
-					- width, - height, - depth,
-					- width, - height, depth,
-
-					- width, height, - depth,
-					- width, height, depth,
-
-					width, height, - depth,
-					width, height, depth,
-
-					width, - height, - depth,
-					width, - height, depth
-				 );
-
-				geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( position, 3 ) );
-
-				return geometry;
-
-			}
-
 function getStyleObject(type, size, obj) {
 	let geo, mat, styleObj
 
@@ -257,6 +256,26 @@ function getBorder(object){
 	var wireframe = new THREE.LineSegments( geo, mat )
 	wireframe.renderOrder = 1 // make sure wireframes are rendered 2nd
 	return wireframe
+}
+
+function getLight(type, intensity) {
+	
+	switch (type) {
+		case 'point':
+			light = new THREE.PointLight(0xffffff, intensity)
+			break
+		case 'directional':
+			light = new THREE.DirectionalLight(0xffffff, intensity)
+			break
+		case 'ambient':
+			light = new THREE.AmbientLight(0xffffff, intensity)
+			break
+		case 'remove':
+			light = RemoveLight()
+			return
+	}
+    light.castShadow = true
+    return light;
 }
 
 function getMaterial(type, color){
@@ -320,35 +339,104 @@ function getPlane(material, size){
 	return mesh
 }
 
-function getLight(type, intensity) {
-	
-	switch (type) {
-		case 'point':
-			light = new THREE.PointLight(0xffffff, intensity)
-			break
-		case 'directional':
-			light = new THREE.DirectionalLight(0xffffff, intensity)
-			break
-		case 'ambient':
-			light = new THREE.AmbientLight(0xffffff, intensity)
-			break
-	}
-    light.castShadow = true
-    return light;
+let controlObject = {
+    posX: 0,
+    posY: 20,
+    posZ: 0,
+
+    rotX: 0,
+    rotY: 0,
+    rotZ: 0,
+
+    scaX: 1,
+    scaY: 1,
+    scaZ: 1,
 }
 
-// function getSpotLight(intensity, color) {
-// 	color = color == undefined ? 'rgb(255, 255, 255):' : color
-// 	var light = new THREE.SpotLight(color, intensity)
-// 	light.castShadow = true
-// 	light.penumbra = 0.5
+function setControlObj() {
+    let affineTransform = gui.addFolder('Affine transform');
+    affineTransform.add(controlObject, 'posX', -50, 50).name('position x').onChange(function () {
+        if (object) {
+            object.position.x = controlObject.posX
+        }
+		if (style) {
+            style.position.set(0, size, 0)
+            style.position.x = controlObject.posX
+        }
+    });
+    affineTransform.add(controlObject, 'posY', -50, 50).name('position y').onChange(function () {
+        if (object) {
+            object.position.y = controlObject.posY
+        }
+		if (style) {
+            style.position.y = controlObject.posY
+        }
 
-// 	// Set up shadow properties for the light
-// 	light.shadow.bias = 0.001 // adjust glitching between object and plane when shadowing
-// 	light.shadow.mapSize.width = 2048  // default: 1024
-// 	light.shadow.mapSize.height = 2048  // default: 1024
-// 	return light
-// }
+    });
+    affineTransform.add(controlObject, 'posZ', -50, 50).name('position z').onChange(function () {
+        if (object) {
+            object.position.z = controlObject.posZ
+        }
+		if (style) {
+            style.position.z = controlObject.posZ
+        }
+
+    });
+    affineTransform.add(controlObject, 'rotX', 0, 20).name('rotate x').onChange(function () {
+        if (object) {
+            object.rotation.x = controlObject.rotX;
+        }
+		if (style) {
+            style.rotation.x = controlObject.rotX;
+        }
+
+    });
+    affineTransform.add(controlObject, 'rotY', 0, 20).name('rotate y').onChange(function () {
+        if (object) {
+            object.rotation.y = controlObject.rotY;
+        }
+		if (style) {
+            style.rotation.y = controlObject.rotY;
+        }
+ 
+    });
+    affineTransform.add(controlObject, 'rotZ', 0, 20).name('rotate z').onChange(function () {
+        if (object) {
+            object.rotation.z = controlObject.rotZ;
+        }
+		if (style) {
+            style.rotation.z = controlObject.rotZ;
+        }
+ 
+    });
+    affineTransform.add(controlObject, 'scaX', 1, 20).name('scale x').onChange(function () {
+        if (object) {
+            object.scale.x = controlObject.scaX
+        }
+		if (style) {
+            style.scale.x = controlObject.scaX
+        }
+
+    });
+    affineTransform.add(controlObject, 'scaY', 1, 20).name('scale y').onChange(function () {
+        if (object) {
+            object.scale.y = controlObject.scaY
+        }
+		if (style) {
+            style.scale.y = controlObject.scaY
+        }
+ 
+    });
+    affineTransform.add(controlObject, 'scaZ', 1, 20).name('scale z').onChange(function () {
+        if (object) {
+            object.scale.z = controlObject.scaZ
+        }
+		if (style) {
+            object.scale.z = controlObject.scaZ
+        }
+
+    });
+}
 
 // -------------- GUI ---------------
 function guiScene( gui, scene ) {
@@ -396,6 +484,16 @@ function guiSceneFog( folder, scene ) {
 
 	fogFolder.addColor( data.fog, 'scene.fog.color' ).onChange( handleColorChange( fog.color ) );
 
+}
+
+function Guilight(light)
+{	
+	let folder = gui.addFolder('light_1');
+
+	folder.add(light,'intensity',0,10);
+	folder.add(light.position,'x',-50,50);
+	folder.add(light.position,'y',20,120);
+	folder.add(light.position,'z',-50,50);
 }
 
 function guiMaterial( gui, mesh, material, geometry ) {
@@ -522,7 +620,7 @@ function clickEvent() {
         option.onclick = () =>
         {
             opt = option.innerText.toLowerCase()
-            addObject(opt)
+            addLightEvent(opt)
         }
     })
 
@@ -536,4 +634,5 @@ function clickEvent() {
     })
 }
 init()
+setControlObj()
 clickEvent()
