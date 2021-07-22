@@ -1,3 +1,7 @@
+import { OrbitControls } from './lib/OrbitControls.js'
+import { TeapotGeometry } from './lib/TeapotGeometry.js'
+import { DiceManager, DiceD6 } from './lib/dice.js'
+
 let object, style, camera, light, plane, controls, material, color, loader
 let size = 20
 
@@ -57,7 +61,7 @@ function init () {
 	document.getElementById("webgl").appendChild(renderer.domElement)
 	renderer.render(scene, camera)
 
-	controls = new THREE.OrbitControls(camera, renderer.domElement)
+	controls = new OrbitControls(camera, renderer.domElement)
 
 	update(renderer, scene, camera, controls)
 
@@ -132,6 +136,7 @@ function addLightEvent(opt) {
 	if (light != undefined) {
         scene.remove(light)
 		light.dispose()
+		RemoveLight()
     }
 
 	light = getLight(opt, 1.2)
@@ -157,11 +162,24 @@ function addLightEvent(opt) {
 		addObjectEvent(object.name)
 		addStyleEvent(style.name)
     }
-    else {
+    else if (object != undefined) {
     	addObjectEvent(object.name)
     }
 
 	update(renderer, scene, camera, controls)
+}
+
+function addAnimation(option){
+	if (style != undefined) {
+		scene.remove(style)
+	}
+	else if (object != undefined){
+		scene.remove(object)
+	}
+	else {
+		return
+	}
+	getAnimetion(option)
 }
 
 function RemoveLight(){
@@ -175,7 +193,7 @@ function RemoveLight(){
 		addObjectEvent(object.name)
 		addStyleEvent(style.name)
     }
-    else {
+    else if (object != undefined) {
     	addObjectEvent(object.name)
     }
 
@@ -345,6 +363,46 @@ function getPlane(material, size){
 
 	return mesh
 }
+
+function getAnimetion(opt){
+	console.log('Enter animation')
+	switch (opt) {
+		case 'animation 1':
+			geometry = new THREE.BoxGeometry(size, size, size)
+			break
+		case 'drop':
+			let world = new CANNON.World()
+			DiceManager.setWorld(world)
+			let dice = new DiceD6({backColor: '#ff0000'}) //DiceD6 for six-sided dice; for options see DiceObject
+
+		    dice.getObject().position.y = 1
+		    dice.getObject().rotation.x = 20 * Math.PI / 180
+		    dice.updateBodyFromMesh()
+
+		    scene.add(dice.getObject())
+		    console.log('Dice')
+
+		    requestAnimationFrame(animate)
+			break
+		default:
+			break
+	}
+	var obj = new THREE.Mesh(geometry, material)
+	obj.castShadow = true
+	obj.name = type
+	obj.position.set(0,size,0)
+	return obj
+}
+
+function animate() {
+        world.step(1.0 / 60.0);
+        
+        dice.updateMeshFromBody(); // Call this after updating the physics world for rearranging the mesh according to the body
+        
+        renderer.render(scene, camera)
+        
+        requestAnimationFrame(animate)
+    }
 
 let controlObject = {
     posX: 0,
@@ -607,10 +665,7 @@ let opt
 let objectOption = document.querySelectorAll('.object-option')
 let lightOption = document.querySelectorAll('.light-option')
 let styleOption = document.querySelectorAll('.style-option')
-
-let basic = document.querySelector('.basic')
-let phong = document.querySelector('.phong')
-let standard = document.querySelector('.standard')
+let animationOption = document.querySelectorAll('.animation-option')
 
 function clickEvent() {
     objectOption.forEach(option =>
@@ -637,6 +692,15 @@ function clickEvent() {
         {
             opt = option.innerText.toLowerCase()
             addStyleEvent(opt)
+        }
+    })
+
+    animationOption.forEach(option =>
+    {
+        option.onclick = () =>
+        {
+            opt = option.innerText.toLowerCase()
+            addAnimation(opt)
         }
     })
 }
