@@ -19,25 +19,9 @@ function init () {
 		},
 	}
 
-	// Init plane
-
 	// Init helper
 	// var helper = new THREE.CameraHelper(directionalLight.shadow.camera)
-	// Init object
 
-	// ---------------- Manipulate materials --------------
-
-	// Plane
-	plane.rotation.x = Math.PI/2
-	plane.position.y = -50
-
-	// Sphere
-	// sphere.position.y = sphere.geometry.parameters.radius
-
-
-
-	// --------------- Add ----------------------------
-	scene.add(plane)
 	// scene.add(helper)
 
 	// ---------------- Camera ----------------------------
@@ -66,6 +50,9 @@ function init () {
 	controls = new THREE.OrbitControls(camera, renderer.domElement)
 
 	update(renderer, scene, camera, controls)
+
+	// Init plane
+	addPlane()
 }
 
 function addObjectEvent(option){
@@ -95,21 +82,24 @@ function addObjectEvent(option){
 	update(renderer, scene, camera, controls)
 }
 
-function addPlane(option){
-	if (object != undefined) {
-        scene.remove(object)
-        object.geometry.dispose()
-        object.material.dispose()
+function addPlane(){
+	if (plane != undefined) {
+        scene.remove(plane)
+        plane.geometry.dispose()
+        plane.material.dispose()
+    }
     if (light != undefined) {
         material = 'standard'
     }
     else {
         material = 'basic'
-        console.log('Do here')
     }
-    let planeMaterial = getMaterial2('basic', 'rgb(153, 153, 153)')
+    let planeMaterial = getMaterial2(material, 'rgb(153, 153, 153)')
 	plane = getPlane(planeMaterial, 500)
 	plane.name = 'plane'
+
+	plane.rotation.x = Math.PI/2
+	plane.position.y = -50
 
 	scene.add(plane)
 	update(renderer, scene, camera, controls)
@@ -156,24 +146,20 @@ function addLightEvent(opt){
 
 	addObjectEvent(object.name)
 
-
+	addPlane()
 
 	update(renderer, scene, camera, controls)
 }
 
 function RemoveLight(){
-	scene.children.forEach((e) => {
-        if (e.name === 'light') {
-            scene.remove(e)
-        }
-    })
     if (light != undefined) {
         scene.remove(light)
         light = undefined
     }
-	gui.remove(folder)
 
 	addObjectEvent(object.name)
+
+	addPlane()
 
     update(renderer, scene, camera, controls)
 }
