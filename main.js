@@ -7,6 +7,16 @@ let gui = new dat.GUI();
 gui.domElement.id = 'gui'
 loader = new THREE.TextureLoader()
 
+dat.GUI.prototype.removeFolder = function(name) {
+  var folder = this.__folders[name]
+  if (!folder) {
+    return
+  }
+  folder.close()
+  this.__ul.removeChild(folder.domElement.parentNode)
+  delete this.__folders[name]
+  this.onResize()
+}
 
 function init () {
 
@@ -71,11 +81,10 @@ function addObjectEvent(option){
     }
     else {
         material = 'basic'
-        console.log('Do here')
     }
     color = 'rgb(92, 133, 214)'
 	let objectMaterial = getMaterial(material, color)
-	objectMaterial.name = 'material'
+	objectMaterial.name = material
 	object = getObject(option, 20, objectMaterial)
 	object.name = option
 	scene.add(object)
@@ -119,9 +128,7 @@ function addStyleEvent(opt){
 	update(renderer, scene, camera, controls)
 }
 
-function addLightEvent(opt){
-	// let style = object.clone()
-
+function addLightEvent(opt) {
 	if (light != undefined) {
         scene.remove(light)
 		light.dispose()
@@ -144,9 +151,15 @@ function addLightEvent(opt){
 
 	Guilight(light)
 
-	addObjectEvent(object.name)
-
 	addPlane()
+
+	if (style != undefined) {
+		addObjectEvent(object.name)
+		addStyleEvent(style.name)
+    }
+    else {
+    	addObjectEvent(object.name)
+    }
 
 	update(renderer, scene, camera, controls)
 }
@@ -156,10 +169,17 @@ function RemoveLight(){
         scene.remove(light)
         light = undefined
     }
-
-	addObjectEvent(object.name)
-
 	addPlane()
+
+	if (style != undefined) {
+		addObjectEvent(object.name)
+		addStyleEvent(style.name)
+    }
+    else {
+    	addObjectEvent(object.name)
+    }
+
+    gui.removeFolder('light')
 
     update(renderer, scene, camera, controls)
 }
@@ -232,6 +252,7 @@ function getStyleObject(type, size, obj) {
 			break
 	}
 	styleObj.name = type
+	styleObj.castShadow = true
 	styleObj.position.set(0,size,0)
 	return styleObj
 }
@@ -261,7 +282,7 @@ function getLight(type, intensity) {
 			return
 	}
     light.castShadow = true
-    return light;
+    return light
 }
 
 function getMaterial(type, color){
@@ -474,7 +495,7 @@ function guiSceneFog( folder, scene ) {
 
 function Guilight(light)
 {	
-	let folder = gui.addFolder('light_1');
+	let folder = gui.addFolder('light');
 
 	folder.add(light,'intensity',0,10);
 	folder.add(light.position,'x',-50,50);
