@@ -1,8 +1,11 @@
 import { OrbitControls } from './lib/OrbitControls.js'
 import { TeapotGeometry } from './lib/TeapotGeometry.js'
 
-let object, style, camera, light, plane, controls, material, color, loader, id
+let object, style, camera, light, plane, controls, material, color, loader, id, idCam
 let size = 20
+let pos = size + 50
+let flag = true
+let CamFlag = true
 
 const scene = new THREE.Scene()
 let renderer = new THREE.WebGLRenderer({ antialias: true })
@@ -45,8 +48,8 @@ function init () {
 		1000
 	)
 
-	camera.position.x = 25
-	camera.position.y = 100
+	camera.position.x = 50
+	camera.position.y = 200
 	camera.position.z = 50
 
 	camera.lookAt(new THREE.Vector3(0, 0, 0))
@@ -111,7 +114,6 @@ function addPlane(){
 	plane.name = 'plane'
 
 	plane.rotation.x = Math.PI/2
-	plane.position.y = -50
 
 	scene.add(plane)
 	update(renderer, scene, camera, controls)
@@ -229,7 +231,7 @@ function getObject(type, size, material) {
 	var obj = new THREE.Mesh(geometry, material)
 	obj.castShadow = true
 	obj.name = type
-	obj.position.set(0,size,0)
+	obj.position.set(0,pos,0)
 	return obj
 }
 
@@ -261,7 +263,7 @@ function getStyleObject(type, size, obj) {
 	}
 	styleObj.name = type
 	styleObj.castShadow = true
-	styleObj.position.set(0,size,0)
+	styleObj.position.set(0,pos,0)
 	return styleObj
 }
 
@@ -359,10 +361,13 @@ function getAnimation(opt){
 		case 'animation 1':
 			break
 		case 'drop':
+			// cameraAnimation()
 			animatationDrop()
+			camDropAnimation()
 			break
 		case 'remove':
 			stopAnimation(id)
+			stopAnimation(idCam)
 		default:
 			break
 	}
@@ -383,17 +388,52 @@ function animatationDrop() {
     renderer.render(scene, camera)
 }
 
+function camDropAnimation(){
+	if (style || object){
+		camDrop()
+	}
+    else{
+    	return
+    }
+	idCam = requestAnimationFrame(function () {
+		camDropAnimation()
+	})
+
+    renderer.render(scene, camera)
+}
+
 function stopAnimation(AnimationID){
 	cancelAnimationFrame( AnimationID )
 }
 
+function cameraAnimation(){
+	var cameraZRotation = new THREE.Group()
+	var cameraYPosition = new THREE.Group()
+	var cameraZPosition = new THREE.Group()
+	var cameraXRotation = new THREE.Group()
+	var cameraYRotation = new THREE.Group()
+
+	cameraZRotation.name = 'cameraZRotation'
+	cameraYPosition.name = 'cameraYPosition'
+	cameraZPosition.name = 'cameraZPosition'
+	cameraXRotation.name = 'cameraXRotation'
+	cameraYRotation.name = 'cameraYRotation'
+
+	cameraZRotation.add(camera)
+	cameraYPosition.add(cameraZRotation)
+	cameraZPosition.add(cameraYPosition)
+	cameraXRotation.add(cameraZPosition)
+	cameraYRotation.add(cameraXRotation)
+	scene.add(cameraYRotation)
+	scene.remove(camera)
+}
+
 function dropObject(obj){
-	let SPEED = 0.05
-	let flag = true
-	if (object.position.y >= size) {
+	let SPEED = 0.03
+	if (object.position.y >= pos) {
 		flag = true
 	}
-	if (object.position.y <= -size) {
+	if (object.position.y <= -pos) {
 		flag = false
 	}
 	if (flag){
@@ -404,9 +444,27 @@ function dropObject(obj){
 	}
 }
 
+function camDrop() {
+	let SPEED = 0.1
+	var cameraYPosition = scene.getObjectByName('cameraYPosition')
+	if (object.position.y >= 0){
+		CamFlag = true
+	}
+	if (object.position.y <= 0 ){
+		CamFlag = false
+	}
+
+	if (CamFlag){
+        camera.position.y -= SPEED * size
+	}
+	else{
+		camera.position.y += SPEED * size
+	}
+}
+
 let controlObject = {
     posX: 0,
-    posY: 20,
+    posY: pos,
     posZ: 0,
 
     rotX: 0,
