@@ -1,8 +1,7 @@
 import { OrbitControls } from './lib/OrbitControls.js'
 import { TeapotGeometry } from './lib/TeapotGeometry.js'
-import { DiceManager, DiceD6 } from './lib/dice.js'
 
-let object, style, camera, light, plane, controls, material, color, loader
+let object, style, camera, light, plane, controls, material, color, loader, id
 let size = 20
 
 const scene = new THREE.Scene()
@@ -170,16 +169,7 @@ function addLightEvent(opt) {
 }
 
 function addAnimation(option){
-	if (style != undefined) {
-		scene.remove(style)
-	}
-	else if (object != undefined){
-		scene.remove(object)
-	}
-	else {
-		return
-	}
-	getAnimetion(option)
+	getAnimation(option)
 }
 
 function RemoveLight(){
@@ -231,7 +221,7 @@ function getObject(type, size, material) {
 			}
 			break
 		case 'teapot':
-			geometry = new THREE.TeapotGeometry(size*2/3, 10)
+			geometry = new TeapotGeometry(size*2/3, 10)
 			break
 		default:
 			break
@@ -364,45 +354,55 @@ function getPlane(material, size){
 	return mesh
 }
 
-function getAnimetion(opt){
-	console.log('Enter animation')
+function getAnimation(opt){
 	switch (opt) {
 		case 'animation 1':
-			geometry = new THREE.BoxGeometry(size, size, size)
 			break
 		case 'drop':
-			let world = new CANNON.World()
-			DiceManager.setWorld(world)
-			let dice = new DiceD6({backColor: '#ff0000'}) //DiceD6 for six-sided dice; for options see DiceObject
-
-		    dice.getObject().position.y = 1
-		    dice.getObject().rotation.x = 20 * Math.PI / 180
-		    dice.updateBodyFromMesh()
-
-		    scene.add(dice.getObject())
-		    console.log('Dice')
-
-		    requestAnimationFrame(animate)
+			animatationDrop()
 			break
+		case 'remove':
+			stopAnimation(id)
 		default:
 			break
 	}
-	var obj = new THREE.Mesh(geometry, material)
-	obj.castShadow = true
-	obj.name = type
-	obj.position.set(0,size,0)
-	return obj
 }
 
-function animate() {
-        world.step(1.0 / 60.0);
-        
-        dice.updateMeshFromBody(); // Call this after updating the physics world for rearranging the mesh according to the body
-        
-        renderer.render(scene, camera)
-        
-        requestAnimationFrame(animate)
+function animatationDrop() {
+	if (style){
+		dropObject(styleObj)
+	}
+    else{
+    	dropObject(object)
     }
+
+    id = requestAnimationFrame(function () {
+		animatationDrop()
+	})
+
+    renderer.render(scene, camera)
+}
+
+function stopAnimation(AnimationID){
+	cancelAnimationFrame( AnimationID )
+}
+
+function dropObject(obj){
+	let SPEED = 0.05
+	let flag = true
+	if (object.position.y >= size) {
+		flag = true
+	}
+	if (object.position.y <= -size) {
+		flag = false
+	}
+	if (flag){
+        object.position.y -= SPEED * size
+	}
+	else{
+		object.position.y += SPEED * size
+	}
+}
 
 let controlObject = {
     posX: 0,
